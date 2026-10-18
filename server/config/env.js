@@ -13,3 +13,12 @@ export const env = {
   clientUrls: (process.env.CLIENT_URL || 'http://localhost:5173')
     .split(',').map((s) => s.trim().replace(/\/$/, '')).filter(Boolean),
 };
+
+// Optional: welcome emails via Brevo's HTTP API (SMTP ports are blocked on free hosting).
+const clientUrls = env.clientUrls;
+env.appUrl = (process.env.APP_URL || clientUrls.find((u) => !u.includes('localhost')) || clientUrls[0] || '').replace(/\/$/, '');
+env.email = {
+  apiKey: process.env.BREVO_API_KEY || '',
+  from: process.env.EMAIL_FROM || '',
+  fromName: process.env.EMAIL_FROM_NAME || 'HelpDesk',
+};

@@ -27,6 +27,7 @@ export const User = mongoose.model('User', new Schema({
   passwordHash: { type: String, required: true, select: false },
   role: { type: String, enum: ROLES, default: 'user' },
   active: { type: Boolean, default: true },
+  demo: { type: Boolean, default: false },
 }, options));
 
 export const Counter = mongoose.model('Counter', new Schema({

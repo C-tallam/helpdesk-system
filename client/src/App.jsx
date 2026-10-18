@@ -6,6 +6,7 @@ import Tickets from './pages/Tickets.jsx';
 import NewTicket from './pages/NewTicket.jsx';
 import TicketDetail from './pages/TicketDetail.jsx';
 import Dashboard from './pages/Dashboard.jsx';
+import Account from './pages/Account.jsx';
 
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
@@ -35,6 +36,7 @@ export default function App() {
         <Route path="tickets" element={<Tickets />} />
         <Route path="tickets/new" element={<NewTicket />} />
         <Route path="tickets/:id" element={<TicketDetail />} />
+        <Route path="account" element={<Account />} />
         <Route path="dashboard" element={<RequireStaff><Dashboard /></RequireStaff>} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

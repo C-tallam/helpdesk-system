@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { ChevronLeft, Lock, Send } from 'lucide-react';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Check, ChevronLeft, Lock, Send } from 'lucide-react';
 import { api, errorText } from '../api/client.js';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { PriorityBadge, StatusBadge } from '../components/Badges.jsx';
@@ -9,6 +9,8 @@ import { fmtDateTime } from '../utils.js';
 
 export default function TicketDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const staff = user.role !== 'user';
   const [ticket, setTicket] = useState(null);
@@ -35,8 +37,12 @@ export default function TicketDetail() {
 
   const update = async (patch) => {
     setError('');
-    try { setTicket(await api.patch(`/api/tickets/${id}`, patch)); } catch (e) { setError(errorText(e)); }
+    try { setTicket(await api.patch(`/api/tickets/${id}`, patch)); return true; } catch (e) { setError(errorText(e)); return false; }
   };
+
+  // Back to wherever the user came from (keeps list filters); falls back to the ticket list.
+  const goBack = () => (location.key !== 'default' ? navigate(-1) : navigate('/tickets'));
+  const resolveAndGoBack = async () => { if (await update({ status: 'Resolved' })) goBack(); };
 
   const postComment = async (e) => {
     e.preventDefault();
@@ -54,6 +60,14 @@ export default function TicketDetail() {
   if (!ticket) return <><div role="alert" className="form-error">{error}</div><p className="center-note" role="status">Loading ticket…</p></>;
 
   const closed = ticket.status === 'Closed';
+  const doneButtons = (
+    <div className="done-actions">
+      {staff && !closed && ticket.status !== 'Resolved' && (
+        <button type="button" className="btn" onClick={resolveAndGoBack}><Check size={15} aria-hidden="true" /> Resolve &amp; done</button>
+      )}
+      <button type="button" className="btn primary" onClick={goBack}><Check size={15} aria-hidden="true" /> Done</button>
+    </div>
+  );
   const select = (label, field, options) => (
     <div className="field">
       <label htmlFor={field}>{label}</label>
@@ -68,7 +82,10 @@ export default function TicketDetail() {
       <Link to="/tickets" className="back"><ChevronLeft size={16} aria-hidden="true" /> Tickets</Link>
       <div className="page-head">
         <h1><span className="mono muted">{ticket.key}</span> {ticket.title}</h1>
-        <div className="badges"><StatusBadge value={ticket.status} /><PriorityBadge value={ticket.priority} /></div>
+        <div className="head-actions">
+          <div className="badges"><StatusBadge value={ticket.status} /><PriorityBadge value={ticket.priority} /></div>
+          {doneButtons}
+        </div>
       </div>
       <div role="alert" className="form-error">{error}</div>
 
@@ -106,6 +123,7 @@ export default function TicketDetail() {
               </form>
             )}
           </section>
+          <div className="done-bar">{doneButtons}</div>
         </div>
 
         <aside>

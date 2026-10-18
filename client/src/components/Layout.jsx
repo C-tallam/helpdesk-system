@@ -14,6 +14,7 @@ export default function Layout() {
             {staff && <NavLink to="/dashboard">Dashboard</NavLink>}
             <NavLink to="/tickets" end>{staff ? 'All tickets' : 'My tickets'}</NavLink>
             <NavLink to="/tickets/new">New ticket</NavLink>
+            <NavLink to="/account">Account</NavLink>
           </nav>
           <div className="user">
             <span className="user-name">{user.name}</span>

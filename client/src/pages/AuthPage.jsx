@@ -3,6 +3,7 @@ import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { LifeBuoy } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { errorText } from '../api/client.js';
+import { DEMO_ACCOUNTS, DEMO_PASSWORD } from '../demo.js';
 
 export default function AuthPage({ mode }) {
   const isLogin = mode === 'login';
@@ -22,6 +23,17 @@ export default function AuthPage({ mode }) {
     try {
       if (isLogin) await login(form.email, form.password);
       else await register(form.name, form.email, form.password);
+      navigate(location.state?.from || '/', { replace: true });
+    } catch (err) {
+      setError(errorText(err));
+      setBusy(false);
+    }
+  };
+
+  const demoLogin = async (email) => {
+    setBusy(true); setError('');
+    try {
+      await login(email, DEMO_PASSWORD);
       navigate(location.state?.from || '/', { replace: true });
     } catch (err) {
       setError(errorText(err));
@@ -55,6 +67,16 @@ export default function AuthPage({ mode }) {
         <p className="switch">
           {isLogin ? <>No account? <Link to="/register">Sign up</Link></> : <>Already registered? <Link to="/login">Sign in</Link></>}
         </p>
+        {isLogin && (
+          <div className="demo-box">
+            <p><strong>Just looking around?</strong> Use a demo account. It has sample tickets and is reset regularly, so please don’t enter real personal information.</p>
+            <div className="demo-btns">
+              {DEMO_ACCOUNTS.map((a) => (
+                <button key={a.email} type="button" className="btn" disabled={busy} onClick={() => demoLogin(a.email)}>{a.label}</button>
+              ))}
+            </div>
+          </div>
+        )}
       </form>
     </div>
   );

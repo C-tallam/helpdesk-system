@@ -1,32 +1,49 @@
 # IT Helpdesk & Ticketing System
 
-Full-stack helpdesk app: React frontend + Express/MongoDB API (JWT auth, roles: user / agent / admin).
+A full-stack helpdesk where people sign up and raise IT support tickets, and support staff triage, assign and resolve them.
 
-- `server/` REST API (this step)
-- `client/` React frontend (coming next)
+**Live demo:** https://helpdesk-system-phi.vercel.app
+Use the *Try as a requester* or *Try as a support agent* buttons on the sign-in page. The API is hosted on a free plan, so the first request can take up to a minute to wake up.
 
-## Run the API locally
+## Features
+- Sign up / sign in with JWT authentication and hashed passwords
+- Three roles: **user** (own tickets only), **agent** and **admin** (all tickets)
+- Create tickets with category and priority, filter and search them, auto-numbered `TKT-0001`
+- Status workflow: Open → In Progress → Resolved → Closed
+- Comments, including internal staff-only notes
+- Activity history on every ticket
+- Staff dashboard with counts by status, priority and category
+- Change password, optional welcome email, rate limiting, input validation
+
+<!-- Add screenshots after taking them, then uncomment:
+![Dashboard](docs/screenshots/dashboard.png)
+![Ticket list](docs/screenshots/tickets.png)
+![Ticket detail](docs/screenshots/ticket-detail.png)
+-->
+
+## Tech stack
+React, Vite, React Router · Node.js, Express · MongoDB Atlas, Mongoose · JWT, bcrypt, Zod, Helmet · Vercel + Render
+
+## Run locally
 ```bash
-cd server
-npm install
-copy .env.example .env      # then edit .env
-npm run dev
+# API
+cd server && npm install && copy .env.example .env   # fill in .env
+npm run dev                                          # http://localhost:5001
+
+# App (second terminal)
+cd client && npm install && copy .env.example .env
+npm run dev                                          # http://localhost:5173
 ```
-Health check: http://localhost:5001/api/health
 
-## Roles
-Anyone can register as a normal **user** (own tickets only). Promote staff with:
-`npm run set-role -- someone@example.com agent` (or `admin`).
+### Server environment variables
+`MONGODB_URI`, `JWT_SECRET` (32+ chars), `CLIENT_URL` (allowed frontend origins, comma-separated), `PORT`.
+Optional: `BREVO_API_KEY`, `EMAIL_FROM`, `EMAIL_FROM_NAME`, `APP_URL` for the welcome email.
 
-## Main endpoints (all except register/login/health need `Authorization: Bearer <token>`)
-| Method | Path | Who |
-|---|---|---|
-| POST | /api/auth/register, /api/auth/login | public |
-| GET | /api/auth/me | any user |
-| POST/GET | /api/tickets | user (own) / staff (all) |
-| GET | /api/tickets/stats | staff |
-| GET/PATCH | /api/tickets/:id | owner or staff (owner may only close) |
-| DELETE | /api/tickets/:id | admin |
-| GET/POST | /api/tickets/:id/comments | owner or staff (internal notes: staff only) |
-| GET | /api/users/agents | staff |
-| GET | /api/users, PATCH /api/users/:id/role | admin |
+### Useful commands (inside `server/`)
+```bash
+npm run set-role -- someone@example.com agent   # promote a user to agent or admin
+npm run seed-demo                               # create or reset the demo accounts and sample tickets
+```
+
+## API overview
+`/api/auth` (register, login, me, change-password) · `/api/tickets` (CRUD, stats, comments) · `/api/users` (agents, roles)

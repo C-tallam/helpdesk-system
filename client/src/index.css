@@ -144,3 +144,15 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--b
   .bars li { grid-template-columns: 90px 1fr 30px; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* Done buttons, demo box, account */
+.head-actions { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+.done-actions { display: flex; gap: .5rem; }
+.done-bar { display: flex; justify-content: flex-end; margin-bottom: 1rem; }
+.demo-box { border-top: 1px solid var(--border); padding-top: .9rem; font-size: 13px; }
+.demo-box p { margin-bottom: .6rem; color: var(--muted); }
+.demo-btns { display: grid; gap: .4rem; }
+.panel.narrow { max-width: 520px; }
+.form-stack { display: grid; gap: .9rem; }
+.form-ok { color: #05603a; font-size: .9rem; }
+.form-ok:empty { display: none; }
