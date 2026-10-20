@@ -15,11 +15,11 @@ Use the *Try as a requester* or *Try as a support agent* buttons on the sign-in 
 - Staff dashboard with counts by status, priority and category
 - Change password, optional welcome email, rate limiting, input validation
 
-<!-- Add screenshots after taking them, then uncomment:
+
 ![Dashboard](docs/screenshots/dashboard.png)
 ![Ticket list](docs/screenshots/tickets.png)
 ![Ticket detail](docs/screenshots/ticket-detail.png)
--->
+
 
 ## Tech stack
 React, Vite, React Router · Node.js, Express · MongoDB Atlas, Mongoose · JWT, bcrypt, Zod, Helmet · Vercel + Render
