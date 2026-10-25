@@ -6,10 +6,12 @@ import { useAuth } from '../auth/AuthContext.jsx';
 import { PriorityBadge, StatusBadge } from '../components/Badges.jsx';
 import { CATEGORIES, PRIORITIES, STATUSES } from '../constants.js';
 import { fmtDateTime } from '../utils.js';
+import { useToast } from '../components/Toast.jsx';
 
 export default function TicketDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const toast = useToast();
   const location = useLocation();
   const { user } = useAuth();
   const staff = user.role !== 'user';
@@ -35,14 +37,14 @@ export default function TicketDetail() {
     return () => ctrl.abort();
   }, [id, staff]);
 
-  const update = async (patch) => {
+  const update = async (patch, msg = 'Ticket updated') => {
     setError('');
-    try { setTicket(await api.patch(`/api/tickets/${id}`, patch)); return true; } catch (e) { setError(errorText(e)); return false; }
+    try { setTicket(await api.patch(`/api/tickets/${id}`, patch)); toast.success(msg); return true; } catch (e) { setError(errorText(e)); return false; }
   };
 
   // Back to wherever the user came from (keeps list filters); falls back to the ticket list.
   const goBack = () => (location.key !== 'default' ? navigate(-1) : navigate('/tickets'));
-  const resolveAndGoBack = async () => { if (await update({ status: 'Resolved' })) goBack(); };
+  const resolveAndGoBack = async () => { if (await update({ status: 'Resolved' }, 'Ticket marked as resolved')) goBack(); };
 
   const postComment = async (e) => {
     e.preventDefault();
@@ -52,6 +54,7 @@ export default function TicketDetail() {
       const c = await api.post(`/api/tickets/${id}/comments`, { text, internal: staff && internal });
       setComments((list) => [...list, c]);
       setText(''); setInternal(false);
+      toast.success(c.internal ? 'Internal note added' : 'Comment added');
     } catch (err) { setError(errorText(err)); }
     setBusy(false);
   };
@@ -150,7 +153,7 @@ export default function TicketDetail() {
                 </div>
               </div>
             )}
-            {!staff && !closed && <button className="btn ghost block" onClick={() => update({ status: 'Closed' })}>Close this ticket</button>}
+            {!staff && !closed && <button className="btn ghost block" onClick={() => update({ status: 'Closed' }, 'Ticket closed')}>Close this ticket</button>}
           </section>
 
           <section className="panel">

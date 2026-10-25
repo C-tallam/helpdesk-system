@@ -17,14 +17,14 @@ export default function TicketTable({ items, showRequester, emptyText = 'No tick
           {items.length === 0 && <tr><td colSpan={showRequester ? 8 : 7} className="empty">{emptyText}</td></tr>}
           {items.map((t) => (
             <tr key={t.id}>
-              <td className="mono"><Link to={`/tickets/${t.id}`}>{t.key}</Link></td>
+              <td className="mono" data-label="Ticket"><Link to={`/tickets/${t.id}`}>{t.key}</Link></td>
               <td className="title-cell"><Link to={`/tickets/${t.id}`}>{t.title}</Link></td>
-              <td><StatusBadge value={t.status} /></td>
-              <td><PriorityBadge value={t.priority} /></td>
-              <td>{t.category}</td>
-              {showRequester && <td>{t.createdBy?.name || '—'}</td>}
-              <td>{t.assignedTo?.name || <span className="muted">Unassigned</span>}</td>
-              <td className="muted nowrap">{timeAgo(t.updatedAt)}</td>
+              <td data-label="Status"><StatusBadge value={t.status} /></td>
+              <td data-label="Priority"><PriorityBadge value={t.priority} /></td>
+              <td data-label="Category">{t.category}</td>
+              {showRequester && <td data-label="Requester">{t.createdBy?.name || '—'}</td>}
+              <td data-label="Assignee">{t.assignedTo?.name || <span className="muted">Unassigned</span>}</td>
+              <td className="muted nowrap" data-label="Updated">{timeAgo(t.updatedAt)}</td>
             </tr>
           ))}
         </tbody>

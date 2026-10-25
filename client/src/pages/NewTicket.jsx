@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, errorText } from '../api/client.js';
 import { CATEGORIES, PRIORITIES } from '../constants.js';
+import { useToast } from '../components/Toast.jsx';
 
 export default function NewTicket() {
   const navigate = useNavigate();
+  const toast = useToast();
   const [form, setForm] = useState({ title: '', category: 'Other', priority: 'Medium', description: '' });
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -15,6 +17,7 @@ export default function NewTicket() {
     setBusy(true); setError('');
     try {
       const t = await api.post('/api/tickets', form);
+      toast.success(`Ticket ${t.key} created`);
       navigate(`/tickets/${t.id}`);
     } catch (err) {
       setError(errorText(err));
