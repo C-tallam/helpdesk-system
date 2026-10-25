@@ -15,20 +15,29 @@ const options = {
       ret.id = ret._id ? ret._id.toString() : ret.id;
       delete ret._id;
       delete ret.passwordHash;
+      delete ret.verifyTokenHash;
+      delete ret.verifyTokenExpires;
       return ret;
     },
   },
 };
 const ref = (name, extra = {}) => ({ type: Schema.Types.ObjectId, ref: name, ...extra });
 
-export const User = mongoose.model('User', new Schema({
+const userSchema = new Schema({
   name: { type: String, required: true, trim: true },
   email: { type: String, required: true, unique: true, lowercase: true, trim: true },
   passwordHash: { type: String, required: true, select: false },
   role: { type: String, enum: ROLES, default: 'user' },
   active: { type: Boolean, default: true },
   demo: { type: Boolean, default: false },
-}, options));
+  // Defaults to true so accounts created before verification existed stay usable.
+  emailVerified: { type: Boolean, default: true },
+  verifyTokenHash: { type: String, select: false },
+  verifyTokenExpires: { type: Date, select: false },
+}, options);
+// Unverified accounts are removed automatically after 7 days.
+userSchema.index({ createdAt: 1 }, { expireAfterSeconds: 7 * 24 * 3600, partialFilterExpression: { emailVerified: false } });
+export const User = mongoose.model('User', userSchema);
 
 export const Counter = mongoose.model('Counter', new Schema({
   _id: String,

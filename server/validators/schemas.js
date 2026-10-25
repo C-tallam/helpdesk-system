@@ -14,6 +14,8 @@ export const changePasswordSchema = z.object({
   currentPassword: z.string().min(1).max(200),
   newPassword: z.string().min(8, 'New password must be at least 8 characters').max(72, 'New password must be at most 72 characters'),
 }).refine((o) => o.currentPassword !== o.newPassword, { message: 'New password must be different', path: ['newPassword'] });
+export const verifyEmailSchema = z.object({ token: z.string().regex(/^[a-f\d]{64}$/i, 'Invalid token') });
+export const resendSchema = z.object({ email });
 export const loginSchema = z.object({ email, password: z.string().min(1).max(200) });
 
 export const ticketCreateSchema = z.object({

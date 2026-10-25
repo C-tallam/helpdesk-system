@@ -13,13 +13,14 @@ Use the *Try as a requester* or *Try as a support agent* buttons on the sign-in 
 - Comments, including internal staff-only notes
 - Activity history on every ticket
 - Staff dashboard with counts by status, priority and category
-- Change password, optional welcome email, rate limiting, input validation
+- Email verification: sign-up needs a confirmation link (one-time, hashed token, 24 h expiry); disposable and non-existent email domains are rejected
+- Change password, rate limiting, input validation
 
-
+<!-- Add screenshots after taking them, then uncomment:
 ![Dashboard](docs/screenshots/dashboard.png)
 ![Ticket list](docs/screenshots/tickets.png)
 ![Ticket detail](docs/screenshots/ticket-detail.png)
-
+-->
 
 ## Tech stack
 React, Vite, React Router · Node.js, Express · MongoDB Atlas, Mongoose · JWT, bcrypt, Zod, Helmet · Vercel + Render
@@ -37,7 +38,7 @@ npm run dev                                          # http://localhost:5173
 
 ### Server environment variables
 `MONGODB_URI`, `JWT_SECRET` (32+ chars), `CLIENT_URL` (allowed frontend origins, comma-separated), `PORT`.
-Optional: `BREVO_API_KEY`, `EMAIL_FROM`, `EMAIL_FROM_NAME`, `APP_URL` for the welcome email.
+Email (Brevo): `BREVO_API_KEY`, `EMAIL_FROM`, `EMAIL_FROM_NAME`, `APP_URL`. When these are set, new accounts must confirm their email address; without them sign-up works without confirmation.
 
 ### Useful commands (inside `server/`)
 ```bash

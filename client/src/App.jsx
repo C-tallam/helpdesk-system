@@ -7,6 +7,7 @@ import NewTicket from './pages/NewTicket.jsx';
 import TicketDetail from './pages/TicketDetail.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Account from './pages/Account.jsx';
+import VerifyEmail from './pages/VerifyEmail.jsx';
 
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
@@ -30,6 +31,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<AuthPage mode="login" />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="/register" element={<AuthPage mode="register" />} />
       <Route element={<RequireAuth><Layout /></RequireAuth>}>
         <Route index element={<Home />} />

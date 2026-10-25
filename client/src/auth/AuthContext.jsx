@@ -24,6 +24,11 @@ export function AuthProvider({ children }) {
     },
     register: async (name, email, password) => {
       const d = await api.post('/api/auth/register', { name, email, password });
+      if (d.token) { setToken(d.token); setUser(d.user); }
+      return d; // may be { verificationRequired: true, email, emailSent }
+    },
+    verifyEmail: async (token) => {
+      const d = await api.post('/api/auth/verify-email', { token });
       setToken(d.token); setUser(d.user); return d.user;
     },
   }), [user, loading, logout]);

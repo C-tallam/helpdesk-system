@@ -11,7 +11,7 @@ let onUnauthorized = () => {};
 export const setUnauthorizedHandler = (fn) => { onUnauthorized = fn; };
 
 export class ApiError extends Error {
-  constructor(message, status, details) { super(message); this.status = status; this.details = details || []; }
+  constructor(message, status, details, code) { super(message); this.status = status; this.details = details || []; this.code = code; }
 }
 
 export const qs = (obj) => {
@@ -37,7 +37,7 @@ async function request(method, path, body, signal) {
     const data = await res.json().catch(() => null);
     if (!res.ok) {
       if (res.status === 401 && token && !path.startsWith('/api/auth/login')) onUnauthorized();
-      throw new ApiError(data?.error || 'Request failed', res.status, data?.details);
+      throw new ApiError(data?.error || 'Request failed', res.status, data?.details, data?.code);
     }
     return data;
   } catch (err) {

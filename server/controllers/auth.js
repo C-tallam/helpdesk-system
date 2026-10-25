@@ -1,19 +1,51 @@
+import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import { User } from '../models/index.js';
 import { signToken } from '../middleware/auth.js';
 import { wrap } from '../middleware/errorHandler.js';
-import { sendWelcomeEmail } from '../utils/email.js';
+import { emailEnabled, sendVerificationEmail, sendWelcomeEmail } from '../utils/email.js';
+import { checkEmailDomain } from '../utils/emailCheck.js';
 
 const DUMMY_HASH = bcrypt.hashSync('not-a-real-password', 10);
 const publicUser = (u) => ({ id: u.id, name: u.name, email: u.email, role: u.role, demo: Boolean(u.demo) });
+const sha256 = (s) => crypto.createHash('sha256').update(s).digest('hex');
+
+// Creates a fresh one-time token (stored hashed, valid 24h) and emails it. Returns true if the email was accepted.
+async function issueVerification(user) {
+  const token = crypto.randomBytes(32).toString('hex');
+  user.verifyTokenHash = sha256(token);
+  user.verifyTokenExpires = new Date(Date.now() + 24 * 3600 * 1000);
+  await user.save();
+  return sendVerificationEmail(user, token);
+}
 
 export const register = wrap(async (req, res) => {
   const { name, email, password } = req.body;
-  if (await User.exists({ email })) return res.status(409).json({ error: 'That email is already registered' });
-  // Public sign-up ALWAYS creates a normal user. Staff roles are granted separately.
-  const user = await User.create({ name, email, passwordHash: await bcrypt.hash(password, 12), role: 'user' });
-  sendWelcomeEmail(user); // fire-and-forget: a mail problem must never break sign-up
-  return res.status(201).json({ token: signToken(user), user: publicUser(user) });
+
+  const check = await checkEmailDomain(email);
+  if (!check.ok) return res.status(400).json({ error: check.reason });
+
+  const passwordHash = await bcrypt.hash(password, 12);
+  const needsVerification = emailEnabled();
+  let user = await User.findOne({ email });
+
+  if (user && user.emailVerified !== false) return res.status(409).json({ error: 'That email is already registered' });
+
+  if (user) {
+    // Earlier sign-up was never confirmed: the newest request replaces it, so nobody can squat on someone else's address.
+    user.name = name;
+    user.passwordHash = passwordHash;
+  } else {
+    // Public sign-up ALWAYS creates a normal user. Staff roles are granted separately.
+    user = new User({ name, email, passwordHash, role: 'user', emailVerified: !needsVerification });
+  }
+
+  if (!needsVerification) {
+    await user.save();
+    return res.status(201).json({ token: signToken(user), user: publicUser(user) });
+  }
+  const emailSent = await issueVerification(user);
+  return res.status(201).json({ verificationRequired: true, email, emailSent });
 });
 
 export const login = wrap(async (req, res) => {
@@ -21,7 +53,28 @@ export const login = wrap(async (req, res) => {
   const user = await User.findOne({ email }).select('+passwordHash');
   const ok = await bcrypt.compare(password, user ? user.passwordHash : DUMMY_HASH);
   if (!user || !ok || !user.active) return res.status(401).json({ error: 'Invalid email or password' });
+  if (user.emailVerified === false) {
+    return res.status(403).json({ error: 'Please verify your email address first. Check your inbox for the confirmation link.', code: 'EMAIL_NOT_VERIFIED' });
+  }
   return res.json({ token: signToken(user), user: publicUser(user) });
+});
+
+export const verifyEmail = wrap(async (req, res) => {
+  const user = await User.findOne({ verifyTokenHash: sha256(req.body.token), verifyTokenExpires: { $gt: new Date() } });
+  if (!user) return res.status(400).json({ error: 'This confirmation link is invalid or has expired. Request a new one from the sign-in page.' });
+  user.emailVerified = true;
+  user.verifyTokenHash = undefined;
+  user.verifyTokenExpires = undefined;
+  await user.save();
+  sendWelcomeEmail(user); // fire-and-forget
+  return res.json({ token: signToken(user), user: publicUser(user) });
+});
+
+// Always answers the same way, so it can't be used to discover which emails are registered.
+export const resendVerification = wrap(async (req, res) => {
+  const user = await User.findOne({ email: req.body.email });
+  if (user && user.emailVerified === false && emailEnabled()) await issueVerification(user);
+  res.json({ ok: true });
 });
 
 export const changePassword = wrap(async (req, res) => {
